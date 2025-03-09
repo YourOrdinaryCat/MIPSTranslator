@@ -1,10 +1,10 @@
 // Reference taken from:
 // https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes
 
-import type {
+import {
+  type KnownInstructionOpcode,
   ImmediateInstructionOpcode,
   JumpInstructionOpcode,
-  KnownInstructionOpcode,
   RegisterInstructionOpcode
 } from "./op";
 
@@ -76,4 +76,57 @@ export type JumpInstruction = InstructionBase<JumpInstructionOpcode> & {
    * A 26 bit number representing the instruction's immediate offset.
    */
   imm: number;
+}
+
+/**
+ * Represents an encoded instruction.
+ */
+export type EncodedInstruction =
+  | RegisterInstruction
+  | ImmediateInstruction
+  | JumpInstruction;
+
+/**
+ * Encodes the provided instruction into a strongly typed representation.
+ *
+ * @param instruction The instruction to encode.
+ * @returns The encoded instruction.
+ * @throws {RangeError} If the instruction's opcode is invalid.
+ * @throws {TypeError} If the instruction does not fit 32-bit unsigned range.
+ */
+export function encode(instruction: number): EncodedInstruction {
+  // Value must be within 32-bit unsigned range
+  if (instruction < 0 || instruction > 4294967295) {
+    throw new TypeError(`The provided instruction is too large - it must fall within 32-bit unsigned range.`);
+  }
+
+  const op = instruction >>> 26;
+  if (op === RegisterInstructionOpcode.REG) {
+    return {
+      op,
+      rs: (instruction >>> 21) & 31,   // 5 bits
+      rt: (instruction >>> 16) & 31,   // 5 bits
+      rd: (instruction >>> 11) & 31,   // 5 bits
+      shamt: (instruction >>> 6) & 31, // 5 bits
+      funct: instruction & 63,         // 6 bits
+    }
+  }
+
+  if (op in JumpInstructionOpcode) {
+    return {
+      op,
+      imm: instruction & 67_108_863, // 26 bits
+    };
+  }
+
+  if (op in ImmediateInstructionOpcode) {
+    return {
+      op,
+      rs: (instruction >>> 21) & 31, // 5 bits
+      rt: (instruction >>> 16) & 31, // 5 bits
+      imm: instruction & 65_535,     // 16 bits
+    };
+  }
+
+  throw new RangeError(`The provided instruction's opcode (${op}) is not valid.`);
 }
