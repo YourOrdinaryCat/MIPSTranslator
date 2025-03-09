@@ -1,11 +1,23 @@
 /**
- * Represents all valid MIPS instruction opcodes.
+ * Represents the opcode used by all MIPS register instructions.
  */
-export const enum KnownInstructionOpcode {
+export enum RegisterInstructionOpcode {
   REG = 0,
+}
 
+/**
+ * Represents the valid opcodes for MIPS jump instructions.
+ */
+export enum JumpInstructionOpcode {
   j = 2,
   jal = 3,
+  trap = 26,
+}
+
+/**
+ * Represents the valid opcodes for MIPS immediate instructions.
+ */
+export enum ImmediateInstructionOpcode {
   beq = 4,
   bne = 5,
   blez = 6,
@@ -21,7 +33,6 @@ export const enum KnownInstructionOpcode {
 
   llo = 24,
   lhi = 25,
-  trap = 26,
 
   lb = 32,
   lh = 33,
@@ -35,22 +46,9 @@ export const enum KnownInstructionOpcode {
 }
 
 /**
- * Represents the opcode used by all MIPS register instructions.
+ * Represents all valid MIPS instruction opcodes.
  */
-export type RegisterInstructionOpcode = KnownInstructionOpcode.REG;
-
-/**
- * Represents the valid opcodes for MIPS jump instructions.
- */
-export type JumpInstructionOpcode =
-  | KnownInstructionOpcode.j
-  | KnownInstructionOpcode.jal
-  | KnownInstructionOpcode.trap;
-
-/**
- * Represents the valid opcodes for MIPS immediate instructions.
- */
-export type ImmediateInstructionOpcode = Exclude<
-  KnownInstructionOpcode,
-  RegisterInstructionOpcode | JumpInstructionOpcode
->;
+export type KnownInstructionOpcode =
+  | RegisterInstructionOpcode
+  | ImmediateInstructionOpcode
+  | JumpInstructionOpcode;
