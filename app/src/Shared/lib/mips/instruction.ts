@@ -1,6 +1,7 @@
 // Reference taken from:
 // https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes
 
+import { FunctionCode } from "./funct";
 import {
   type KnownInstructionOpcode,
   ImmediateInstructionOpcode,
@@ -43,9 +44,9 @@ export type RegisterInstruction = InstructionBase<RegisterInstructionOpcode> & {
   shamt: number;
 
   /**
-   * A 6 bit number representing the instruction's function.
+   * A 6 bit number representing the instruction's function code.
    */
-  funct: number;
+  funct: FunctionCode;
 }
 
 /**
@@ -91,7 +92,7 @@ export type EncodedInstruction =
  *
  * @param instruction The instruction to encode.
  * @returns The encoded instruction.
- * @throws {RangeError} If the instruction's opcode is invalid.
+ * @throws {RangeError} If the instruction's opcode or function code is invalid.
  * @throws {TypeError} If the instruction does not fit 32-bit unsigned range.
  */
 export function encode(instruction: number): EncodedInstruction {
@@ -102,14 +103,19 @@ export function encode(instruction: number): EncodedInstruction {
 
   const op = instruction >>> 26;
   if (op === RegisterInstructionOpcode.REG) {
-    return {
-      op,
-      rs: (instruction >>> 21) & 31,   // 5 bits
-      rt: (instruction >>> 16) & 31,   // 5 bits
-      rd: (instruction >>> 11) & 31,   // 5 bits
-      shamt: (instruction >>> 6) & 31, // 5 bits
-      funct: instruction & 63,         // 6 bits
+    const funct = instruction & 63; // 6 bits
+    if (funct in FunctionCode) {
+      return {
+        op,
+        rs: (instruction >>> 21) & 31,   // 5 bits
+        rt: (instruction >>> 16) & 31,   // 5 bits
+        rd: (instruction >>> 11) & 31,   // 5 bits
+        shamt: (instruction >>> 6) & 31, // 5 bits
+        funct,
+      }
     }
+
+    throw new RangeError(`The provided register instruction's function code (${funct}) is not valid.`);
   }
 
   if (op in JumpInstructionOpcode) {
