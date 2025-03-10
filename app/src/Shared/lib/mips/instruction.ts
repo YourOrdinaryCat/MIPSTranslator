@@ -95,7 +95,7 @@ export type EncodedInstruction =
  * @throws {RangeError} If the instruction's opcode or function code is invalid.
  * @throws {TypeError} If the instruction does not fit 32-bit unsigned range.
  */
-export function encode(instruction: number): EncodedInstruction {
+export function encodeRawInstruction(instruction: number): EncodedInstruction {
   // Value must be within 32-bit unsigned range
   if (instruction < 0 || instruction > 4294967295) {
     throw new TypeError(`The provided instruction is too large - it must fall within 32-bit unsigned range.`);
