@@ -1,13 +1,14 @@
 // Reference taken from:
 // https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes
 
-import { FunctionCode } from "./funct";
+import { FunctionCode } from './funct';
 import {
   type KnownInstructionOpcode,
   ImmediateInstructionOpcode,
   JumpInstructionOpcode,
-  RegisterInstructionOpcode
-} from "./op";
+  RegisterInstructionOpcode,
+} from './op';
+import { Register } from './reg';
 
 /**
  * Represents a base for all MIPS instructions.
@@ -17,7 +18,7 @@ export type InstructionBase<TOpCode extends number = KnownInstructionOpcode> = {
    * A 6 bit number representing the instruction's opcode.
    */
   op: TOpCode;
-}
+};
 
 /**
  * Represents an instruction encoded as a register instruction.
@@ -26,17 +27,17 @@ export type RegisterInstruction = InstructionBase<RegisterInstructionOpcode> & {
   /**
    * A 5 bit number representing the instruction's first source register.
    */
-  rs: number;
+  rs: Register;
 
   /**
    * A 5 bit number representing the instruction's second source register.
    */
-  rt: number;
+  rt: Register;
 
   /**
    * A 5 bit number representing the instruction's destination register.
    */
-  rd: number,
+  rd: Register;
 
   /**
    * A 5 bit number representing the instruction's shift amount.
@@ -47,27 +48,28 @@ export type RegisterInstruction = InstructionBase<RegisterInstructionOpcode> & {
    * A 6 bit number representing the instruction's function code.
    */
   funct: FunctionCode;
-}
+};
 
 /**
  * Represents an instruction that uses the immediate encoding.
  */
-export type ImmediateInstruction = InstructionBase<ImmediateInstructionOpcode> & {
-  /**
-   * A 5 bit number representing the instruction's first register.
-   */
-  rs: number;
+export type ImmediateInstruction =
+  InstructionBase<ImmediateInstructionOpcode> & {
+    /**
+     * A 5 bit number representing the instruction's first register.
+     */
+    rs: Register;
 
-  /**
-   * A 5 bit number representing the instruction's second register.
-   */
-  rt: number;
+    /**
+     * A 5 bit number representing the instruction's second register.
+     */
+    rt: Register;
 
-  /**
-   * A 16 bit number representing the instruction's immediate data.
-   */
-  imm: number;
-}
+    /**
+     * A 16 bit number representing the instruction's immediate data.
+     */
+    imm: number;
+  };
 
 /**
  * Represents an instruction that uses the jump encoding.
@@ -77,7 +79,7 @@ export type JumpInstruction = InstructionBase<JumpInstructionOpcode> & {
    * A 26 bit number representing the instruction's immediate offset.
    */
   imm: number;
-}
+};
 
 /**
  * Represents an encoded instruction.
@@ -98,7 +100,9 @@ export type EncodedInstruction =
 export function encodeRawInstruction(instruction: number): EncodedInstruction {
   // Value must be within 32-bit unsigned range
   if (instruction < 0 || instruction > 4294967295) {
-    throw new TypeError(`The provided instruction is too large - it must fall within 32-bit unsigned range.`);
+    throw new TypeError(
+      `The provided instruction is too large - it must fall within 32-bit unsigned range.`
+    );
   }
 
   const op = instruction >>> 26;
@@ -107,15 +111,17 @@ export function encodeRawInstruction(instruction: number): EncodedInstruction {
     if (funct in FunctionCode) {
       return {
         op,
-        rs: (instruction >>> 21) & 31,   // 5 bits
-        rt: (instruction >>> 16) & 31,   // 5 bits
-        rd: (instruction >>> 11) & 31,   // 5 bits
+        rs: (instruction >>> 21) & 31, // 5 bits
+        rt: (instruction >>> 16) & 31, // 5 bits
+        rd: (instruction >>> 11) & 31, // 5 bits
         shamt: (instruction >>> 6) & 31, // 5 bits
         funct,
-      }
+      };
     }
 
-    throw new RangeError(`The provided register instruction's function code (${funct}) is not valid.`);
+    throw new RangeError(
+      `The provided register instruction's function code (${funct}) is not valid.`
+    );
   }
 
   if (op in JumpInstructionOpcode) {
@@ -130,9 +136,11 @@ export function encodeRawInstruction(instruction: number): EncodedInstruction {
       op,
       rs: (instruction >>> 21) & 31, // 5 bits
       rt: (instruction >>> 16) & 31, // 5 bits
-      imm: instruction & 65_535,     // 16 bits
+      imm: instruction & 65_535, // 16 bits
     };
   }
 
-  throw new RangeError(`The provided instruction's opcode (${op}) is not valid.`);
+  throw new RangeError(
+    `The provided instruction's opcode (${op}) is not valid.`
+  );
 }
