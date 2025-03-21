@@ -29,12 +29,23 @@ function inEnum<TEnum extends object>(
 }
 
 function tryParseRegister(val: string) {
-  if (val.startsWith('$')) {
+  let radix = 10;
+  if (val.startsWith('0x')) {
+    val = val.slice(2);
+    radix = 16;
+  } else if (val.startsWith('$')) {
     val = val.slice(1);
+  }
 
-    if (inEnum(val, Register)) {
-      return Register[val];
-    }
+  if (inEnum(val, Register)) {
+    return Register[val];
+  }
+
+  if (
+    (radix === 10 && /^[0-9]{1,2}$/.test(val)) ||
+    (radix === 16 && /^[0-9A-F]{1,2}$/.test(val))
+  ) {
+    return parseInt(val, radix);
   }
 
   return undefined;
@@ -107,7 +118,7 @@ function makeInstImpl<TType extends InstructionType>(
         let radix = 10;
         if (val.startsWith('0x')) {
           val = val.slice(2);
-          radix = 8;
+          radix = 16;
         }
 
         inst[key] = parseInt(val, radix);
