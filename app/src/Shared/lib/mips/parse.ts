@@ -138,6 +138,34 @@ function makeI(
   return makeInstImpl('i', ImmediateInstructionOpcode[op], input, keys);
 }
 
+function makeLS(
+  op: Exclude<keyof typeof ImmediateLoadStoreOpcode, number>,
+  input: string[]
+): Partial<EncodedInstruction> {
+  // Handle imm(rs) and imm (rs)
+  const second = input.at(2);
+
+  if (second?.includes('(') && second?.endsWith(')')) {
+    const [imm, rs] = second.split('(');
+    input = [...input.slice(0, 2), imm, rs.slice(0, -1)];
+  } else {
+    let rsIn = input.at(3);
+    if (rsIn) {
+      if (rsIn.startsWith('(') && rsIn.endsWith(')')) {
+        rsIn = rsIn.slice(1, -1);
+      }
+
+      input = [...input.slice(0, 3), rsIn];
+    }
+  }
+
+  return makeInstImpl('i', ImmediateLoadStoreOpcode[op], input, [
+    'rt',
+    'imm',
+    'rs',
+  ]);
+}
+
 function makeJ(
   op: Exclude<keyof typeof JumpInstructionOpcode, number>,
   input: string[],
@@ -165,7 +193,10 @@ export function parsePartialInstruction(
   }
 
   // Otherwise, split and parse the input
-  const [first, ...rest] = input.split(/\s+/);
+  const [start, ...end] = input.split(/\s*,\s*/);
+  const [first, second] = start.split(/\s+/);
+  const rest = [second, ...end];
+
   if (!first) {
     return {};
   }
@@ -211,7 +242,7 @@ export function parsePartialInstruction(
   }
 
   if (inEnum(first, ImmediateLoadStoreOpcode)) {
-    return makeI(first, rest, ['rs', 'imm', 'rs']);
+    return makeLS(first, rest);
   }
 
   if (inEnum(first, JumpInstructionOpcode)) {
