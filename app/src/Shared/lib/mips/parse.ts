@@ -200,7 +200,11 @@ export function parsePartialInstruction(
 
   // If we receive hex input, parse it directly
   if (/^[0-9A-F]{1,8}$/.test(input)) {
-    return decodeInstruction(parseInt(input, 16));
+    try {
+      return decodeInstruction(parseInt(input, 16));
+    } catch {
+      return {};
+    }
   }
 
   // Otherwise, split and parse the input
