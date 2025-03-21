@@ -90,6 +90,42 @@ export type DecodedInstruction =
   | JumpInstruction;
 
 /**
+ * Checks whether the provided instruction is an R-type.
+ *
+ * @param instruction The instruction to check.
+ * @returns `true` if the instruction is an R-type, `false` otherwise.
+ */
+export function isReg(
+  instruction: DecodedInstruction
+): instruction is RegisterInstruction {
+  return instruction.op === RegisterInstructionOpcode.REG;
+}
+
+/**
+ * Checks whether the provided instruction is an I-type.
+ *
+ * @param instruction The instruction to check.
+ * @returns `true` if the instruction is an I-type, `false` otherwise.
+ */
+export function isImm(
+  instruction: DecodedInstruction
+): instruction is ImmediateInstruction {
+  return instruction.op in ImmediateInstructionOpcode;
+}
+
+/**
+ * Checks whether the provided instruction is a J-type.
+ *
+ * @param instruction The instruction to check.
+ * @returns `true` if the instruction is a J-type, `false` otherwise.
+ */
+export function isJump(
+  instruction: DecodedInstruction
+): instruction is JumpInstruction {
+  return instruction.op in JumpInstructionOpcode;
+}
+
+/**
  * Decodes the provided instruction into a strongly typed representation.
  *
  * @param instruction The instruction to decode.
@@ -143,4 +179,35 @@ export function decodeInstruction(instruction: number): DecodedInstruction {
   throw new RangeError(
     `The provided instruction's opcode (${op}) is not valid.`
   );
+}
+
+/**
+ * Encodes the provided instruction into a number.
+ *
+ * @param instruction The instruction to Encode.
+ * @returns The encoded instruction.
+ * @throws {TypeError} If the instruction is not valid.
+ */
+export function encodeInstruction(instruction: DecodedInstruction): number {
+  if (isReg(instruction)) {
+    return (
+      instruction.rs * 2 ** 21 +
+      instruction.rt * 2 ** 16 +
+      instruction.rd * 2 ** 11 +
+      instruction.shamt * 2 ** 6 +
+      instruction.funct
+    );
+  }
+
+  if (isJump(instruction)) {
+    return instruction.op * 2 ** 26 + instruction.imm;
+  }
+
+  if (isImm(instruction)) {
+    return (
+      instruction.rs * 2 ** 21 + instruction.rt * 2 ** 16 + instruction.imm
+    );
+  }
+
+  throw new TypeError(`The provided instruction is not valid.`);
 }
