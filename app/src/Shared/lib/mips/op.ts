@@ -15,25 +15,52 @@ export enum JumpInstructionOpcode {
 }
 
 /**
- * Represents the valid opcodes for MIPS immediate instructions.
+ * Represents the valid opcodes for MIPS immediate arithmetic instructions.
+ * These follow the format `op rt, rs, imm`
  */
-export enum ImmediateInstructionOpcode {
-  beq = 4,
-  bne = 5,
-  blez = 6,
-  bgtz = 7,
-
+export enum ImmediateArithmeticOpcode {
   addi = 8,
   addiu = 9,
-  slti = 10,
-  sltiu = 11,
   andi = 12,
   ori = 13,
   xori = 14,
 
+  slti = 10,
+  sltiu = 11,
+}
+
+/**
+ * Represents the valid opcodes for MIPS immediate load instructions.
+ * These follow the format `op rt, imm`
+ */
+export enum ImmediateLoadOpcode {
   llo = 24,
   lhi = 25,
+}
 
+/**
+ * Represents the valid opcodes for MIPS immediate branch instructions.
+ * These follow the format `op rs, rt, label`
+ */
+export enum ImmediateBranchOpcode {
+  beq = 4,
+  bne = 5,
+}
+
+/**
+ * Represents the valid opcodes for MIPS immediate branch with zero instructions.
+ * These follow the format `op rs, label`
+ */
+export enum ImmediateBranchZOpcode {
+  blez = 6,
+  bgtz = 7,
+}
+
+/**
+ * Represents the valid opcodes for MIPS immediate load/store instructions.
+ * These follow the format `op rt, imm(rs)`
+ */
+export enum ImmediateLoadStoreOpcode {
   lb = 32,
   lh = 33,
   lw = 35,
@@ -44,6 +71,24 @@ export enum ImmediateInstructionOpcode {
   sh = 41,
   sw = 43,
 }
+
+/**
+ * Represents the valid opcodes for MIPS immediate instructions.
+ */
+export const ImmediateInstructionOpcode = {
+  ...ImmediateArithmeticOpcode,
+  ...ImmediateLoadOpcode,
+  ...ImmediateBranchOpcode,
+  ...ImmediateBranchZOpcode,
+  ...ImmediateLoadStoreOpcode,
+};
+
+export type ImmediateInstructionOpcode =
+  | ImmediateArithmeticOpcode
+  | ImmediateLoadOpcode
+  | ImmediateBranchOpcode
+  | ImmediateBranchZOpcode
+  | ImmediateLoadStoreOpcode;
 
 /**
  * Represents all valid MIPS instruction opcodes.
