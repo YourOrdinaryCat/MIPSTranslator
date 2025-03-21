@@ -8,7 +8,13 @@ import {
   ShiftFunctionCode,
   ShiftVFunctionCode,
 } from './funct';
-import { DecodedInstruction, decodeInstruction } from './instruction';
+import {
+  DecodedInstruction,
+  decodeInstruction,
+  ImmediateInstruction,
+  JumpInstruction,
+  RegisterInstruction,
+} from './instruction';
 import {
   ImmediateArithmeticOpcode,
   ImmediateBranchOpcode,
@@ -137,22 +143,32 @@ function makeR(
   funct: Exclude<keyof typeof FunctionCode, number>,
   input: string[],
   keys: ValidKey<'r'>[]
-): Partial<DecodedInstruction> {
-  return makeInstImpl('r', FunctionCode[funct], input, keys);
+): Partial<RegisterInstruction> {
+  return makeInstImpl(
+    'r',
+    FunctionCode[funct],
+    input,
+    keys
+  ) as Partial<RegisterInstruction>;
 }
 
 function makeI(
   op: Exclude<keyof typeof ImmediateInstructionOpcode, number>,
   input: string[],
   keys: ValidKey<'i'>[]
-): Partial<DecodedInstruction> {
-  return makeInstImpl('i', ImmediateInstructionOpcode[op], input, keys);
+): Partial<ImmediateInstruction> {
+  return makeInstImpl(
+    'i',
+    ImmediateInstructionOpcode[op],
+    input,
+    keys
+  ) as Partial<ImmediateInstruction>;
 }
 
 function makeLS(
   op: Exclude<keyof typeof ImmediateLoadStoreOpcode, number>,
   input: string[]
-): Partial<DecodedInstruction> {
+): Partial<ImmediateInstruction> {
   // Handle imm(rs) and imm (rs)
   const second = input.at(2);
 
@@ -174,15 +190,20 @@ function makeLS(
     'rt',
     'imm',
     'rs',
-  ]);
+  ]) as Partial<ImmediateInstruction>;
 }
 
 function makeJ(
   op: Exclude<keyof typeof JumpInstructionOpcode, number>,
   input: string[],
   keys: ValidKey<'j'>[]
-): Partial<DecodedInstruction> {
-  return makeInstImpl('j', JumpInstructionOpcode[op], input, keys);
+): Partial<JumpInstruction> {
+  return makeInstImpl(
+    'j',
+    JumpInstructionOpcode[op],
+    input,
+    keys
+  ) as Partial<JumpInstruction>;
 }
 
 /**
@@ -213,6 +234,15 @@ export function parsePartialInstruction(
     return {};
   }
 
+  if (inEnum(first, JumpFunctionCode)) {
+    const inst = makeR(first, rest, ['rs']);
+    if (inst.funct === JumpFunctionCode.jalr) {
+      return { ...inst, rd: Register.ra };
+    }
+
+    return inst;
+  }
+
   if (inEnum(first, ArithmeticFunctionCode)) {
     return makeR(first, rest, ['rd', 'rs', 'rt']);
   }
@@ -229,12 +259,12 @@ export function parsePartialInstruction(
     return makeR(first, rest, ['rd', 'rt', 'rs']);
   }
 
-  if (inEnum(first, JumpFunctionCode) || inEnum(first, MoveToFunctionCode)) {
+  if (inEnum(first, MoveToFunctionCode)) {
     return makeR(first, rest, ['rs']);
   }
 
   if (inEnum(first, MoveFromFunctionCode)) {
-    return makeR(first, rest, ['rd', 'rt', 'shamt']);
+    return makeR(first, rest, ['rd']);
   }
 
   if (inEnum(first, ImmediateArithmeticOpcode)) {
