@@ -205,7 +205,10 @@ export function encodeInstruction(instruction: DecodedInstruction): number {
 
   if (isImm(instruction)) {
     return (
-      instruction.rs * 2 ** 21 + instruction.rt * 2 ** 16 + instruction.imm
+      instruction.op * 2 ** 26 +
+      instruction.rs * 2 ** 21 +
+      instruction.rt * 2 ** 16 +
+      instruction.imm
     );
   }
 
