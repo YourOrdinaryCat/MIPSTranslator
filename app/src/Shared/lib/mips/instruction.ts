@@ -82,22 +82,22 @@ export type JumpInstruction = InstructionBase<JumpInstructionOpcode> & {
 };
 
 /**
- * Represents an encoded instruction.
+ * Strongly typed representation of a MIPS instruction.
  */
-export type EncodedInstruction =
+export type DecodedInstruction =
   | RegisterInstruction
   | ImmediateInstruction
   | JumpInstruction;
 
 /**
- * Encodes the provided instruction into a strongly typed representation.
+ * Decodes the provided instruction into a strongly typed representation.
  *
- * @param instruction The instruction to encode.
- * @returns The encoded instruction.
+ * @param instruction The instruction to decode.
+ * @returns The decoded instruction.
  * @throws {RangeError} If the instruction's opcode or function code is invalid.
  * @throws {TypeError} If the instruction does not fit 32-bit unsigned range.
  */
-export function encodeRawInstruction(instruction: number): EncodedInstruction {
+export function decodeInstruction(instruction: number): DecodedInstruction {
   // Value must be within 32-bit unsigned range
   if (instruction < 0 || instruction > 4294967295) {
     throw new TypeError(

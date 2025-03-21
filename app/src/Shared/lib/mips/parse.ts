@@ -8,7 +8,7 @@ import {
   ShiftFunctionCode,
   ShiftVFunctionCode,
 } from './funct';
-import { EncodedInstruction, encodeRawInstruction } from './instruction';
+import { DecodedInstruction, decodeInstruction } from './instruction';
 import {
   ImmediateArithmeticOpcode,
   ImmediateBranchOpcode,
@@ -70,7 +70,7 @@ function makeInstImpl<TType extends InstructionType>(
   op: ValidOp<TType>,
   input: string[],
   keys: ValidKey<TType>[]
-): Partial<EncodedInstruction> {
+): Partial<DecodedInstruction> {
   let inst: Record<string, unknown>;
 
   if (type === 'r') {
@@ -126,7 +126,7 @@ function makeR(
   funct: Exclude<keyof typeof FunctionCode, number>,
   input: string[],
   keys: ValidKey<'r'>[]
-): Partial<EncodedInstruction> {
+): Partial<DecodedInstruction> {
   return makeInstImpl('r', FunctionCode[funct], input, keys);
 }
 
@@ -134,14 +134,14 @@ function makeI(
   op: Exclude<keyof typeof ImmediateInstructionOpcode, number>,
   input: string[],
   keys: ValidKey<'i'>[]
-): Partial<EncodedInstruction> {
+): Partial<DecodedInstruction> {
   return makeInstImpl('i', ImmediateInstructionOpcode[op], input, keys);
 }
 
 function makeLS(
   op: Exclude<keyof typeof ImmediateLoadStoreOpcode, number>,
   input: string[]
-): Partial<EncodedInstruction> {
+): Partial<DecodedInstruction> {
   // Handle imm(rs) and imm (rs)
   const second = input.at(2);
 
@@ -170,26 +170,26 @@ function makeJ(
   op: Exclude<keyof typeof JumpInstructionOpcode, number>,
   input: string[],
   keys: ValidKey<'j'>[]
-): Partial<EncodedInstruction> {
+): Partial<DecodedInstruction> {
   return makeInstImpl('j', JumpInstructionOpcode[op], input, keys);
 }
 
 /**
- * Parses the provided input into a partial encoded instruction.
+ * Parses the provided input into a partial decoded instruction.
  *
  * @param input The input to parse.
- * @returns The encoded instruction. It may be missing certain fields.
+ * @returns The decoded instruction. It may be missing certain fields.
  */
 export function parsePartialInstruction(
   input: string
-): Partial<EncodedInstruction> {
+): Partial<DecodedInstruction> {
   if (input.startsWith('0x')) {
     input = input.slice(2);
   }
 
   // If we receive hex input, parse it directly
   if (/^[0-9A-F]{1,8}$/.test(input)) {
-    return encodeRawInstruction(parseInt(input, 16));
+    return decodeInstruction(parseInt(input, 16));
   }
 
   // Otherwise, split and parse the input
