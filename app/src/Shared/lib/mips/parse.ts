@@ -193,10 +193,7 @@ export function parsePartialInstruction(
   }
 
   // Otherwise, split and parse the input
-  const [start, ...end] = input.split(/\s*,\s*/);
-  const [first, second] = start.split(/\s+/);
-  const rest = [second, ...end];
-
+  const [first, ...rest] = input.split(/\s+|\s*,\s*/);
   if (!first) {
     return {};
   }
