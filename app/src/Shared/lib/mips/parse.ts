@@ -1,4 +1,5 @@
 import { inEnum } from '../util/enum';
+import { decodeInstruction } from './encoding';
 import {
   ArithmeticFunctionCode,
   FunctionCode,
@@ -11,7 +12,6 @@ import {
 } from './funct';
 import {
   DecodedInstruction,
-  decodeInstruction,
   ImmediateInstruction,
   JumpInstruction,
   RegisterInstruction,

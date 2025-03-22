@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { encodeInstruction } from '../../lib/mips/encoding';
 import {
   ArithmeticFunctionCode,
   FunctionCode,
@@ -11,7 +12,6 @@ import {
 } from '../../lib/mips/funct';
 import {
   DecodedInstruction,
-  encodeInstruction,
   ImmediateInstruction,
   isJump,
   isReg,
@@ -25,7 +25,7 @@ import {
   ImmediateInstructionOpcode,
   ImmediateLoadOpcode,
   JumpInstructionOpcode,
-  KnownInstructionOpcode
+  KnownInstructionOpcode,
 } from '../../lib/mips/op';
 import { parsePartialInstruction } from '../../lib/mips/parse';
 import { Register } from '../../lib/mips/reg';
