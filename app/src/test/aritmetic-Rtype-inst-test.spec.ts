@@ -132,7 +132,7 @@ describe('TranslatorService aritmetic R-type instructions', () => {
         });
         it('should translate "014B4804" to mips', () => {
             const result = service.translateInstructionToMIPS('014B4804');
-            expect(result).toEqual('sllv $t1 $t2 $t3');
+            expect(result).toEqual('sllv $t1 $t3 $t2');
         });
         it('should translate "000A4903" to mips', () => {
             const result = service.translateInstructionToMIPS('000A4903');
@@ -140,7 +140,7 @@ describe('TranslatorService aritmetic R-type instructions', () => {
         });
         it('should translate "014B4807" to mips', () => {
             const result = service.translateInstructionToMIPS('014B4807');
-            expect(result).toEqual('srav $t1 $t2 $t3');
+            expect(result).toEqual('srav $t1 $t3 $t2');
         });
         it('should translate "000A4902" to mips', () => {
             const result = service.translateInstructionToMIPS('000A4902');
@@ -148,7 +148,7 @@ describe('TranslatorService aritmetic R-type instructions', () => {
         });
         it('should translate "014B4806" to mips', () => {
             const result = service.translateInstructionToMIPS('014B4806');
-            expect(result).toEqual('srlv $t1 $t2 $t3');
+            expect(result).toEqual('srlv $t1 $t3 $t2');
         });
         it('should translate "014B4823" to mips', () => {
             const result = service.translateInstructionToMIPS('014B4823');

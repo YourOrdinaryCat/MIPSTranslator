@@ -42,7 +42,7 @@ describe('TranslatorService jump instruction tests', () => {
         });
         it('should translate "0120F809" to mips', () => {
             const result = service.translateInstructionToMIPS('0120F809');
-            expect(result).toEqual('jalr $t1 $ra');
+            expect(result).toEqual('jalr $ra $t1');
         });
         it('should translate "01200008" to mips', () => {
             const result = service.translateInstructionToMIPS('01200008');
