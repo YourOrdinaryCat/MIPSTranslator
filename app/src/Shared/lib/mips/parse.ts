@@ -223,7 +223,7 @@ export function parsePartialInstruction(
   }
 
   // Otherwise, split and parse the input
-  const [first, ...rest] = input.split(/\s+|\s*,\s*/);
+  const [first, ...rest] = input.split(/\s*,\s*|\s+/);
   if (!first) {
     return {};
   }
