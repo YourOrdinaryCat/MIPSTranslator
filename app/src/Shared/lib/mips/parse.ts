@@ -1,3 +1,4 @@
+import { inEnum } from '../util/enum';
 import {
   ArithmeticFunctionCode,
   FunctionCode,
@@ -26,13 +27,6 @@ import {
   RegisterInstructionOpcode,
 } from './op';
 import { Register } from './reg';
-
-function inEnum<TEnum extends object>(
-  val: string | number | symbol,
-  e: TEnum
-): val is keyof TEnum {
-  return val in e;
-}
 
 function tryParseRegister(val: string) {
   let radix = 10;

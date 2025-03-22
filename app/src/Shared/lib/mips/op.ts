@@ -93,6 +93,12 @@ export type ImmediateInstructionOpcode =
 /**
  * Represents all valid MIPS instruction opcodes.
  */
+export const KnownInstructionOpcode = {
+  ...RegisterInstructionOpcode,
+  ...ImmediateInstructionOpcode,
+  ...JumpInstructionOpcode,
+};
+
 export type KnownInstructionOpcode =
   | RegisterInstructionOpcode
   | ImmediateInstructionOpcode
