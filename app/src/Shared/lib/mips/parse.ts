@@ -1,15 +1,7 @@
 import { inEnum } from '../util/enum';
+import { getRequiredArguments, InstructionType, ValidArgument } from './args';
 import { decodeInstruction } from './encoding';
-import {
-  ArithmeticFunctionCode,
-  FunctionCode,
-  JumpFunctionCode,
-  MoveFromFunctionCode,
-  MoveToFunctionCode,
-  MultiplicationFunctionCode,
-  ShiftFunctionCode,
-  ShiftVFunctionCode,
-} from './funct';
+import { FunctionCode } from './funct';
 import {
   DecodedInstruction,
   ImmediateInstruction,
@@ -17,16 +9,18 @@ import {
   RegisterInstruction,
 } from './instruction';
 import {
-  ImmediateArithmeticOpcode,
-  ImmediateBranchOpcode,
-  ImmediateBranchZOpcode,
   ImmediateInstructionOpcode,
-  ImmediateLoadOpcode,
   ImmediateLoadStoreOpcode,
   JumpInstructionOpcode,
   RegisterInstructionOpcode,
 } from './op';
 import { Register } from './reg';
+
+type ValidOp<TType extends InstructionType> = TType extends 'reg'
+  ? FunctionCode
+  : TType extends 'imm'
+  ? ImmediateInstructionOpcode
+  : JumpInstructionOpcode;
 
 function tryParseRegister(val: string) {
   let radix = 10;
@@ -51,25 +45,12 @@ function tryParseRegister(val: string) {
   return undefined;
 }
 
-type InstructionType = 'r' | 'i' | 'j';
-type ValidOp<TType extends InstructionType> = TType extends 'r'
-  ? FunctionCode
-  : TType extends 'i'
-  ? ImmediateInstructionOpcode
-  : JumpInstructionOpcode;
-
-type ValidKey<TType extends InstructionType> = TType extends 'r'
-  ? 'rd' | 'rs' | 'rt' | 'shamt'
-  : TType extends 'i'
-  ? 'rs' | 'rt' | 'imm'
-  : 'imm';
-
 function getSkipped(type: InstructionType, keys: string[]) {
-  if (type === 'r') {
+  if (type === 'reg') {
     return ['rd', 'rs', 'rt', 'shamt'].filter((k) => !keys.includes(k));
   }
 
-  if (type === 'i') {
+  if (type === 'imm') {
     return ['rs', 'rt', 'imm'].filter((k) => !keys.includes(k));
   }
 
@@ -80,11 +61,11 @@ function makeInstImpl<TType extends InstructionType>(
   type: TType,
   op: ValidOp<TType>,
   input: string[],
-  keys: ValidKey<TType>[]
+  keys: ValidArgument<TType>[]
 ): Partial<DecodedInstruction> {
   let inst: Record<string, unknown>;
 
-  if (type === 'r') {
+  if (type === 'reg') {
     inst = {
       op: RegisterInstructionOpcode.REG,
       funct: op,
@@ -136,10 +117,10 @@ function makeInstImpl<TType extends InstructionType>(
 function makeR(
   funct: Exclude<keyof typeof FunctionCode, number>,
   input: string[],
-  keys: ValidKey<'r'>[]
+  keys: ValidArgument<'reg'>[]
 ): Partial<RegisterInstruction> {
   return makeInstImpl(
-    'r',
+    'reg',
     FunctionCode[funct],
     input,
     keys
@@ -149,10 +130,10 @@ function makeR(
 function makeI(
   op: Exclude<keyof typeof ImmediateInstructionOpcode, number>,
   input: string[],
-  keys: ValidKey<'i'>[]
+  keys: ValidArgument<'imm'>[]
 ): Partial<ImmediateInstruction> {
   return makeInstImpl(
-    'i',
+    'imm',
     ImmediateInstructionOpcode[op],
     input,
     keys
@@ -180,7 +161,7 @@ function makeLS(
     }
   }
 
-  return makeInstImpl('i', ImmediateLoadStoreOpcode[op], input, [
+  return makeInstImpl('imm', ImmediateLoadStoreOpcode[op], input, [
     'rt',
     'imm',
     'rs',
@@ -190,10 +171,10 @@ function makeLS(
 function makeJ(
   op: Exclude<keyof typeof JumpInstructionOpcode, number>,
   input: string[],
-  keys: ValidKey<'j'>[]
+  keys: ValidArgument<'jump'>[]
 ): Partial<JumpInstruction> {
   return makeInstImpl(
-    'j',
+    'jump',
     JumpInstructionOpcode[op],
     input,
     keys
@@ -228,62 +209,46 @@ export function parsePartialInstruction(
     return {};
   }
 
-  if (inEnum(first, JumpFunctionCode)) {
-    const inst = makeR(first, rest, ['rs']);
-    if (inst.funct === JumpFunctionCode.jalr) {
-      return { ...inst, rd: Register.ra };
+  // Load/store has some special semantics
+  if (inEnum(first, ImmediateLoadStoreOpcode)) {
+    return makeLS(first, rest);
+  }
+
+  // jalr may be called with one or two registers:
+  // https://stackoverflow.com/questions/23225990/what-is-the-proper-behavior-of-jalr-a0-a0
+  if (first === 'jalr') {
+    const inst = makeR(first, rest, ['rd', 'rs']);
+    if (inst.rd && !inst.rs) {
+      return { ...inst, rs: inst.rd, rd: Register.ra };
     }
 
     return inst;
   }
 
-  if (inEnum(first, ArithmeticFunctionCode)) {
-    return makeR(first, rest, ['rd', 'rs', 'rt']);
+  const args = getRequiredArguments(first);
+  if (!args) {
+    return {};
   }
 
-  if (inEnum(first, MultiplicationFunctionCode)) {
-    return makeR(first, rest, ['rs', 'rt']);
+  if (args.type === 'reg') {
+    return makeR(
+      first as Exclude<keyof typeof FunctionCode, number>,
+      rest,
+      args.arguments
+    );
   }
 
-  if (inEnum(first, ShiftFunctionCode)) {
-    return makeR(first, rest, ['rd', 'rt', 'shamt']);
+  if (args.type === 'imm') {
+    return makeI(
+      first as Exclude<keyof typeof ImmediateInstructionOpcode, number>,
+      rest,
+      args.arguments
+    );
   }
 
-  if (inEnum(first, ShiftVFunctionCode)) {
-    return makeR(first, rest, ['rd', 'rt', 'rs']);
-  }
-
-  if (inEnum(first, MoveToFunctionCode)) {
-    return makeR(first, rest, ['rs']);
-  }
-
-  if (inEnum(first, MoveFromFunctionCode)) {
-    return makeR(first, rest, ['rd']);
-  }
-
-  if (inEnum(first, ImmediateArithmeticOpcode)) {
-    return makeI(first, rest, ['rt', 'rs', 'imm']);
-  }
-
-  if (inEnum(first, ImmediateLoadOpcode)) {
-    return makeI(first, rest, ['rt', 'imm']);
-  }
-
-  if (inEnum(first, ImmediateBranchOpcode)) {
-    return makeI(first, rest, ['rs', 'rt', 'imm']);
-  }
-
-  if (inEnum(first, ImmediateBranchZOpcode)) {
-    return makeI(first, rest, ['rs', 'imm']);
-  }
-
-  if (inEnum(first, ImmediateLoadStoreOpcode)) {
-    return makeLS(first, rest);
-  }
-
-  if (inEnum(first, JumpInstructionOpcode)) {
-    return makeJ(first, rest, ['imm']);
-  }
-
-  return {};
+  return makeJ(
+    first as Exclude<keyof typeof JumpInstructionOpcode, number>,
+    rest,
+    args.arguments
+  );
 }

@@ -1,29 +1,21 @@
 import { Injectable } from '@angular/core';
-import { encodeInstruction } from '../../lib/mips/encoding';
 import {
-  ArithmeticFunctionCode,
-  FunctionCode,
-  JumpFunctionCode,
-  MoveFromFunctionCode,
-  MoveToFunctionCode,
-  MultiplicationFunctionCode,
-  ShiftFunctionCode,
-  ShiftVFunctionCode,
-} from '../../lib/mips/funct';
+  getRequiredFunctArguments,
+  getRequiredImmArguments,
+} from '../../lib/mips/args';
+import { encodeInstruction } from '../../lib/mips/encoding';
+import { FunctionCode } from '../../lib/mips/funct';
 import {
   DecodedInstruction,
   ImmediateInstruction,
+  isImm,
   isJump,
   isReg,
   JumpInstruction,
   RegisterInstruction,
 } from '../../lib/mips/instruction';
 import {
-  ImmediateArithmeticOpcode,
-  ImmediateBranchOpcode,
-  ImmediateBranchZOpcode,
   ImmediateInstructionOpcode,
-  ImmediateLoadOpcode,
   JumpInstructionOpcode,
   KnownInstructionOpcode,
 } from '../../lib/mips/op';
@@ -51,13 +43,6 @@ export class TranslatorService {
     }
 
     return 'unknown';
-  }
-
-  translateInstructionToHex(instruction: string): string {
-    const parsed = parsePartialInstruction(instruction);
-    const hex = encodeInstruction(parsed as DecodedInstruction);
-
-    return hex.toString(16).toUpperCase().padStart(8, '0');
   }
 
   private makeRDisplay(
@@ -97,65 +82,35 @@ export class TranslatorService {
       .toUpperCase()}`;
   }
 
+  translateInstructionToHex(instruction: string): string {
+    try {
+      const parsed = parsePartialInstruction(instruction);
+      const hex = encodeInstruction(parsed as DecodedInstruction);
+
+      return hex.toString(16).toUpperCase().padStart(8, '0');
+    } catch {
+      return 'Unsupported Instruction';
+    }
+  }
+
   translateInstructionToMIPS(hexInstruction: string): string {
     if (hexInstruction.startsWith('0x')) {
       hexInstruction = hexInstruction.slice(2);
     }
+
     const inst = parsePartialInstruction(hexInstruction) as DecodedInstruction;
 
     if (isReg(inst)) {
-      if (inEnum(inst.funct, ArithmeticFunctionCode)) {
-        return this.makeRDisplay(inst, 'rd', 'rs', 'rt');
-      }
-
-      if (inEnum(inst.funct, MultiplicationFunctionCode)) {
-        return this.makeRDisplay(inst, 'rs', 'rt');
-      }
-
-      if (inEnum(inst.funct, ShiftFunctionCode)) {
-        return this.makeRDisplay(inst, 'rd', 'rt', 'shamt');
-      }
-
-      if (inEnum(inst.funct, ShiftVFunctionCode)) {
-        return this.makeRDisplay(inst, 'rd', 'rt', 'rs');
-      }
-
-      if (inEnum(inst.funct, MoveToFunctionCode)) {
-        return this.makeRDisplay(inst, 'rs');
-      }
-
-      if (inEnum(inst.funct, MoveFromFunctionCode)) {
-        return this.makeRDisplay(inst, 'rd');
-      }
-
-      if (inst.funct === JumpFunctionCode.jalr) {
-        return this.makeRDisplay(inst, 'rd', 'rs');
-      }
-      return this.makeRDisplay(inst, 'rs');
+      const args = getRequiredFunctArguments(inst.funct);
+      return this.makeRDisplay(inst, ...args);
+    } else if (isImm(inst)) {
+      const args = getRequiredImmArguments(inst.op);
+      return this.makeIDisplay(inst, ...args);
+    } else if (isJump(inst)) {
+      return this.makeJDisplay(inst as JumpInstruction);
     }
 
-    if (isJump(inst)) {
-      return this.makeJDisplay(inst);
-    }
-
-    if (inEnum(inst.op, ImmediateArithmeticOpcode)) {
-      return this.makeIDisplay(inst, 'rt', 'rs', 'imm');
-    }
-
-    if (inEnum(inst.op, ImmediateLoadOpcode)) {
-      return this.makeIDisplay(inst, 'rt', 'imm');
-    }
-
-    if (inEnum(inst.op, ImmediateBranchOpcode)) {
-      return this.makeIDisplay(inst, 'rs', 'rt', 'imm');
-    }
-
-    if (inEnum(inst.op, ImmediateBranchZOpcode)) {
-      return this.makeIDisplay(inst, 'rs', 'imm');
-    }
-
-    // Load store - these use a special format
-    return this.makeIDisplay(inst, 'rt', 'imm', 'rs');
+    return 'Unsupported Instruction';
   }
 
   binaryToHex(binaryString: string): string {
