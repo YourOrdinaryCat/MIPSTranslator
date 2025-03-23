@@ -150,3 +150,22 @@ export function getRequiredArguments(
 
   return undefined;
 }
+
+/**
+ * Checks if the provided operation allows usage of a label as an immediate argument.
+ */
+export function allowsImmediateLabel(
+  operation: string | ImmediateInstructionOpcode | JumpInstructionOpcode
+) {
+  if (inEnum(operation, JumpInstructionOpcode)) {
+    return true;
+  }
+
+  if (inEnum(operation, ImmediateBranchOpcode)) {
+    return true;
+  } else if (inEnum(operation, ImmediateBranchZOpcode)) {
+    return true;
+  }
+
+  return false;
+}
