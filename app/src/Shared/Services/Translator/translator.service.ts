@@ -101,13 +101,17 @@ export class TranslatorService {
     const inst = parsePartialInstruction(hexInstruction) as DecodedInstruction;
 
     if (isReg(inst)) {
+      if (inst.funct === FunctionCode.jalr && inst.rd !== Register.ra) {
+        return this.makeRDisplay(inst, 'rd', 'rs');
+      }
+
       const args = getRequiredFunctArguments(inst.funct);
       return this.makeRDisplay(inst, ...args);
     } else if (isImm(inst)) {
       const args = getRequiredImmArguments(inst.op);
       return this.makeIDisplay(inst, ...args);
     } else if (isJump(inst)) {
-      return this.makeJDisplay(inst as JumpInstruction);
+      return this.makeJDisplay(inst);
     }
 
     return 'Unsupported Instruction';
