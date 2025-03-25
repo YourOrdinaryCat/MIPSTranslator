@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   getRequiredFunctArguments,
   getRequiredImmArguments,
+  rtToImmediateTrap,
 } from '../../lib/mips/args';
 import { encodeInstruction } from '../../lib/mips/encoding';
 import { FunctionCode } from '../../lib/mips/funct';
@@ -64,7 +65,12 @@ export class TranslatorService {
     inst: ImmediateInstruction,
     ...regs: Exclude<keyof ImmediateInstruction, 'op'>[]
   ) {
-    const vals = [ImmediateInstructionOpcode[inst.op]];
+    const vals = [
+      inst.op === 1
+        ? rtToImmediateTrap(inst.rt)
+        : ImmediateInstructionOpcode[inst.op],
+    ];
+
     for (const key of regs) {
       vals.push(
         key === 'imm'

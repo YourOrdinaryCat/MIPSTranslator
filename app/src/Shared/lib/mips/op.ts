@@ -11,7 +11,6 @@ export enum RegisterInstructionOpcode {
 export enum JumpInstructionOpcode {
   j = 2,
   jal = 3,
-  trap = 26,
 }
 
 /**
@@ -57,6 +56,19 @@ export enum ImmediateBranchZOpcode {
 }
 
 /**
+ * Represents the valid opcodes for MIPS immediate trap instructions.
+ * These follow the format `op rs, imm`
+ */
+export enum ImmediateTrapOpcode {
+  teqi = 1,
+  tnei = 1,
+  tgei = 1,
+  tgeiu = 1,
+  tlti = 1,
+  tltiu = 1,
+}
+
+/**
  * Represents the valid opcodes for MIPS immediate load/store instructions.
  * These follow the format `op rt, imm(rs)`
  */
@@ -81,6 +93,7 @@ export const ImmediateInstructionOpcode = {
   ...ImmediateBranchOpcode,
   ...ImmediateBranchZOpcode,
   ...ImmediateLoadStoreOpcode,
+  ...ImmediateTrapOpcode,
 };
 
 export type ImmediateInstructionOpcode =
@@ -88,7 +101,8 @@ export type ImmediateInstructionOpcode =
   | ImmediateLoadOpcode
   | ImmediateBranchOpcode
   | ImmediateBranchZOpcode
-  | ImmediateLoadStoreOpcode;
+  | ImmediateLoadStoreOpcode
+  | ImmediateTrapOpcode;
 
 /**
  * Represents all valid MIPS instruction opcodes.

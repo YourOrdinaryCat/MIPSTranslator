@@ -1,5 +1,10 @@
 import { inEnum } from '../util/enum';
-import { getRequiredArguments, InstructionType, ValidArgument } from './args';
+import {
+  getRequiredArguments,
+  immediateTrapToRt,
+  InstructionType,
+  ValidArgument,
+} from './args';
 import { decodeInstruction } from './encoding';
 import { FunctionCode } from './funct';
 import {
@@ -11,6 +16,7 @@ import {
 import {
   ImmediateInstructionOpcode,
   ImmediateLoadStoreOpcode,
+  ImmediateTrapOpcode,
   JumpInstructionOpcode,
   RegisterInstructionOpcode,
 } from './op';
@@ -223,6 +229,13 @@ export function parsePartialInstruction(
     }
 
     return inst;
+  }
+
+  // Immediate traps require special rt values:
+  // https://www.math.unipd.it/~sperduti/ARCHITETTURE-1/mips32.pdf
+  if (inEnum(first, ImmediateTrapOpcode)) {
+    const inst = makeI(first, rest, ['rs', 'imm']);
+    return { ...inst, rt: immediateTrapToRt(first) };
   }
 
   const args = getRequiredArguments(first);

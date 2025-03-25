@@ -74,6 +74,19 @@ export enum MoveToFunctionCode {
 }
 
 /**
+ * Represents the valid function codes for MIPS trap register instructions.
+ * These follow the format `funct rs, rt`
+ */
+export enum TrapFunctionCode {
+  teq = 52,
+  tne = 54,
+  tge = 48,
+  tgeu = 49,
+  tlt = 50,
+  tltu = 51,
+}
+
+/**
  * Represents the valid function codes for MIPS register instructions.
  */
 export const FunctionCode = {
@@ -84,6 +97,7 @@ export const FunctionCode = {
   ...JumpFunctionCode,
   ...MoveFromFunctionCode,
   ...MoveToFunctionCode,
+  ...TrapFunctionCode,
 };
 
 export type FunctionCode =
@@ -93,4 +107,5 @@ export type FunctionCode =
   | ShiftVFunctionCode
   | JumpFunctionCode
   | MoveFromFunctionCode
-  | MoveToFunctionCode;
+  | MoveToFunctionCode
+  | TrapFunctionCode;

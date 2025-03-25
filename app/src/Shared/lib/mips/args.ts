@@ -8,6 +8,7 @@ import {
   MultiplicationFunctionCode,
   ShiftFunctionCode,
   ShiftVFunctionCode,
+  TrapFunctionCode,
 } from './funct';
 import {
   ImmediateArithmeticOpcode,
@@ -16,8 +17,10 @@ import {
   ImmediateInstructionOpcode,
   ImmediateLoadOpcode,
   ImmediateLoadStoreOpcode,
+  ImmediateTrapOpcode,
   JumpInstructionOpcode,
 } from './op';
+import { Register } from './reg';
 
 export type InstructionType = 'reg' | 'imm' | 'jump';
 
@@ -66,7 +69,10 @@ export function getRequiredImmArguments<
     return ['rt', 'imm'];
   } else if (inEnum(op, ImmediateBranchOpcode)) {
     return ['rs', 'rt', 'imm'];
-  } else if (inEnum(op, ImmediateBranchZOpcode)) {
+  } else if (
+    inEnum(op, ImmediateBranchZOpcode) ||
+    inEnum(op, ImmediateTrapOpcode)
+  ) {
     return ['rs', 'imm'];
   } else if (inEnum(op, ImmediateLoadStoreOpcode)) {
     return ['rt', 'imm', 'rs'];
@@ -110,7 +116,10 @@ export function getRequiredFunctArguments<TFunct extends string | FunctionCode>(
     return ['rs'];
   } else if (inEnum(funct, ArithmeticFunctionCode)) {
     return ['rd', 'rs', 'rt'];
-  } else if (inEnum(funct, MultiplicationFunctionCode)) {
+  } else if (
+    inEnum(funct, MultiplicationFunctionCode) ||
+    inEnum(funct, TrapFunctionCode)
+  ) {
     return ['rs', 'rt'];
   } else if (inEnum(funct, ShiftFunctionCode)) {
     return ['rd', 'rt', 'shamt'];
@@ -149,6 +158,41 @@ export function getRequiredArguments(
   }
 
   return undefined;
+}
+
+enum TrapToRt {
+  teqi = 12,
+  tnei = 14,
+  tgei = 8,
+  tgeiu = 9,
+  tlti = 10,
+  tltiu = 11,
+}
+
+/**
+ * Based on the provided immediate trap opcode, gets its required rt value.
+ */
+export function immediateTrapToRt(op: string): number {
+  if (inEnum(op, TrapToRt)) {
+    return TrapToRt[op];
+  }
+
+  throw new TypeError(
+    `The provided opcode ("${op}") is not part of the valid immediate trap opcodes.`
+  );
+}
+
+/**
+ * Based on the provided rt value, gets its immediate trap opcode.
+ */
+export function rtToImmediateTrap(rt: Register): string {
+  if (inEnum(rt, TrapToRt)) {
+    return TrapToRt[rt];
+  }
+
+  throw new TypeError(
+    `The provided rt ("${rt}") is not part of the valid immediate trap rt values.`
+  );
 }
 
 /**
