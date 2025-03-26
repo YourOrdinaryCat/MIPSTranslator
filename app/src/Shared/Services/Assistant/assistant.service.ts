@@ -54,8 +54,7 @@ export class AssistantService {
     for (let i = 0; i < numExamples; i++) {
       const example = [instruction];
       if (instruction === 'jalr') {
-        examples.push(``);
-        continue;
+        example.push(this.randomRegister());
       }
 
       for (const arg of args.arguments) {
